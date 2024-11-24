@@ -1,0 +1,35 @@
+name: serial_pos
+description: "A new Flutter plugin project."
+version: 0.0.1
+homepage: https://github.com/Moein-dev
+
+environment:
+  sdk: ^3.5.4
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  web: ^0.5.1
+  plugin_platform_interface: ^2.0.2
+  usb_serial_communication: ^0.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+
+  plugin:
+    platforms:
+      android:
+        package: com.pos.serial_pos
+        pluginClass: SerialPosPlugin
+      ios:
+        pluginClass: SerialPosPlugin
+      web:
+        pluginClass: SerialPosWeb
+        fileName: serial_pos_web.dart
