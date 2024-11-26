@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:serial_pos/parsian_response_parser.dart';
+import 'package:serial_pos/parsian/parsian_response_parser.dart';
 import 'package:serial_pos/pos_command.dart';
 import 'package:serial_pos/pos_device.dart';
 import 'package:serial_pos/serial_communication.dart';
 
-import 'pos_response.dart';
-import 'pos_response_parser.dart';
+import '../pos_response.dart';
+import '../pos_response_parser.dart';
 
 class ParsianPos implements PosDevice {
   late final SerialCommunication _serialCommunication;

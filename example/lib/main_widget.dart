@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:serial_pos/parsian_command.dart';
-import 'package:serial_pos/parsian_pos.dart';
-import 'package:serial_pos/parsian_response.dart';
+import 'package:serial_pos/parsian/parsian_command.dart';
+import 'package:serial_pos/parsian/parsian_pos.dart';
+import 'package:serial_pos/parsian/parsian_response.dart';
 import 'package:serial_pos/pos_device.dart';
 import 'package:serial_pos/serial_communication.dart';
 

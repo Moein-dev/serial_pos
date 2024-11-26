@@ -1,0 +1,36 @@
+group 'id.farellsujanto.flutter_serial_communication'
+version '1.0'
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 34
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+    }
+
+    if (project.android.hasProperty("namespace")) {
+        namespace 'id.farellsujanto.flutter_serial_communication'
+    }
+	buildFeatures {
+        buildConfig = true
+    }
+}
+
+dependencies {
+    api 'com.github.mik3y:usb-serial-for-android:3.8.0'
+}

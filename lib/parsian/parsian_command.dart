@@ -1,4 +1,4 @@
-import 'pos_command.dart';
+import '../pos_command.dart';
 
 class ParsianBuyCommand extends PosCommand {
   final int amount;

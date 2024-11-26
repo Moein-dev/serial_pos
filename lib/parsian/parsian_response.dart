@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'pos_response.dart';
+import '../pos_response.dart';
 
 class ParsianBuyResponse extends BuyResponse {
   final String terminal;

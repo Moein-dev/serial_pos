@@ -14,7 +14,8 @@ dependencies:
     sdk: flutter
   web: ^0.5.1
   plugin_platform_interface: ^2.0.2
-  usb_serial_communication: ^0.0.3
+  flutter_serial_communication:
+    path: packages/flutter_serial_communication/
 
 dev_dependencies:
   flutter_test:

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:serial_pos/parsian_response.dart';
+import 'package:serial_pos/parsian/parsian_response.dart';
 
-import 'pos_response.dart';
-import 'pos_response_parser.dart';
+import '../pos_response.dart';
+import '../pos_response_parser.dart';
 
 class ParsianResponseParser implements PosResponseParser {
   @override

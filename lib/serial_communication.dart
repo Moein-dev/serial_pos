@@ -1,14 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:usb_serial_communication/models/device_info.dart';
-import 'package:usb_serial_communication/usb_serial_communication.dart';
+import 'package:flutter_serial_communication/flutter_serial_communication.dart';
+import 'package:flutter_serial_communication/models/device_info.dart';
 
 class SerialCommunication {
-  final _usbSerialCommunicationPlugin = UsbSerialCommunication();
+  final _flutterSerialCommunicationPlugin = FlutterSerialCommunication();
 
   Stream<String> get onMessageReceived =>
-      _usbSerialCommunicationPlugin
+      _flutterSerialCommunicationPlugin
           .getSerialMessageListener()
           .receiveBroadcastStream()
           .map((event) {
@@ -23,7 +23,7 @@ class SerialCommunication {
       });
 
   Stream<bool> get onConnectionReceived =>
-      _usbSerialCommunicationPlugin
+      _flutterSerialCommunicationPlugin
           .getDeviceConnectionListener()
           .receiveBroadcastStream()
           .map((isConnected) {
@@ -31,19 +31,19 @@ class SerialCommunication {
       });
 
   Future<List<DeviceInfo>> getAvailableDevices() async {
-    return await _usbSerialCommunicationPlugin.getAvailableDevices();
+    return await _flutterSerialCommunicationPlugin.getAvailableDevices();
   }
 
   Future<bool> connect(DeviceInfo device, {int baudRate = 19200}) async {
-    return await _usbSerialCommunicationPlugin.connect(device, baudRate);
+    return await _flutterSerialCommunicationPlugin.connect(device, baudRate);
   }
 
   Future<void> disconnect() async {
-    await _usbSerialCommunicationPlugin.disconnect();
+    await _flutterSerialCommunicationPlugin.disconnect();
   }
 
   Future<void> sendData(String data) async {
     final commandBytes = Uint8List.fromList(utf8.encode(data));
-    await _usbSerialCommunicationPlugin.write(commandBytes);
+    await _flutterSerialCommunicationPlugin.write(commandBytes);
   }
 }
