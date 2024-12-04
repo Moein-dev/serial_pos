@@ -83,6 +83,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  flutter_serial_communication:
+    dependency: transitive
+    description:
+      path: "../packages/flutter_serial_communication"
+      relative: true
+    source: path
+    version: "0.2.7"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -259,14 +266,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.2"
-  usb_serial_communication:
-    dependency: transitive
-    description:
-      name: usb_serial_communication
-      sha256: dfd8f5a1d01b9b023f6f2508587f357b3638e7c230c6ac221a86e9f930debd48
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.3"
   vector_math:
     dependency: transitive
     description:

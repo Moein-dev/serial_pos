@@ -37,7 +37,7 @@ class ParsianPos implements PosDevice {
           await _serialCommunication.connect(devices[0], baudRate: baudRate);
       debugPrint('Connection Success: $isConnectionSuccess');
       return isConnectionSuccess;
-    } else{
+    } else {
       return false;
     }
   }
@@ -54,7 +54,7 @@ class ParsianPos implements PosDevice {
 
   @override
   Future<void> sendCommand(PosCommand command, {String? payload}) async {
-    this.payload = payload ?? "";
+    this.payload = payload ?? this.payload;
 
     String commandStr = command.buildCommand();
     String commandLength =
@@ -65,21 +65,29 @@ class ParsianPos implements PosDevice {
   void _listenToSerialMessages() {
     _serialCommunication.onMessageReceived.listen((event) {
       _messageBuffer.write(event);
+      debugPrint("message buffer $_messageBuffer");
       _processMessage();
     });
   }
 
   void _processMessage() {
-    if (_messageBuffer.length >= headerSize) {
-      _messageLength =
-          int.parse(_messageBuffer.toString().substring(0, headerSize));
+    if (_messageBuffer.length >= headerSize && _messageLength == 0) {
+      final lengthString = _messageBuffer.toString().substring(0, headerSize);
+      debugPrint("length: $lengthString");
+      _messageLength = int.parse(lengthString);
     }
+
+    debugPrint("${_messageBuffer.length} == ${_messageLength + headerSize}");
 
     if (_messageBuffer.length == _messageLength + headerSize) {
       final response = parser.parse(
           _messageBuffer.toString().substring(headerSize), payload);
-      _messageEventController.add(response);
+      debugPrint("parsed response: $response");
+
       _messageBuffer.clear();
+      _messageLength = 0;
+
+      _messageEventController.add(response);
     }
   }
 }
