@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:serial_pos_example/main_widget.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
@@ -26,9 +25,9 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('POS Example'),
+          title: const Text('POS Sample'),
         ),
-        body: const MainWidget(),
+        body: MainWidget(),
       ),
     );
   }

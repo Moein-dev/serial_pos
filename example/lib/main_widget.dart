@@ -1,132 +1,123 @@
 import 'package:flutter/material.dart';
-import 'package:serial_pos/parsian/parsian_command.dart';
-import 'package:serial_pos/parsian/parsian_pos.dart';
-import 'package:serial_pos/parsian/parsian_response.dart';
-import 'package:serial_pos/pos_device.dart';
-import 'package:serial_pos/serial_communication.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:serial_pos_example/pos_bloc.dart';
+import 'package:serial_pos_example/pos_state.dart';
 
-class MainWidget extends StatefulWidget {
-  const MainWidget({super.key});
+import 'pos_event.dart';
 
-  @override
-  MainWidgetState createState() => MainWidgetState();
-}
+class MainWidget extends StatelessWidget {
+  final TextEditingController _amountController =
+      TextEditingController(text: "2000");
+  final TextEditingController _payloadController =
+      TextEditingController(text: "123456");
 
-class MainWidgetState extends State<MainWidget> {
-  String _messageResult = '';
-  Map<String, dynamic> data = {};
-  bool _loading = false;
-  bool _connected = false;
-
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _payloadController = TextEditingController();
-  late final SerialCommunication _serialCommunication = SerialCommunication();
-  late final PosDevice _pos = ParsianPos(_serialCommunication);
+  MainWidget({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    _initializePosListener();
-  }
-
-  void _initializePosListener() {
-    _pos.onMessageEvent.listen((event) {
-      setState(() {
-        _loading = false;
-        if (event is ParsianBuyResponse) {
-          data = event.toJson();
-          _messageResult =
-              "Success: rrn is ${event.rrn}, payload: ${event.payload}";
-        } else if (event is ParsianFailedResponse) {
-          data = event.toJson();
-          _messageResult =
-              "Failed: response code ${event.resp.toString()}, payload: ${event.payload}";
-        }
-      });
-    });
-  }
-
-  Future<void> _sendAmount() async {
-    FocusScope.of(context).unfocus();
-    setState(() => _loading = true);
-
-    final amount = _amountController.text;
-    final amountInt = int.tryParse(amount);
-    final payload = _payloadController.text;
-
-    if (amountInt == null) {
-      _showSnackBar("Invalid amount");
-      setState(() => _loading = false);
-      return;
-    }
-
-    try {
-      final command = ParsianBuyCommand(amount: amountInt);
-      await _pos.sendCommand(command, payload: payload);
-    } catch (e) {
-      _showSnackBar("Error sending command");
-      setState(() => _loading = false);
-    }
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => PosBloc(),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildTextField(
+                controller: _amountController, label: 'Enter amount'),
+            const SizedBox(height: 16.0),
+            _buildTextField(
+                controller: _payloadController, label: 'Enter payload'),
+            const SizedBox(height: 16.0),
+            BlocBuilder<PosBloc, PosState>(
+              builder: (context, state) {
+                return Wrap(
+                  children: [
+                    _buildButton(
+                      label: 'Connect',
+                      onPressed: !state.isConnected
+                          ? () => context.read<PosBloc>().add(ConnectEvent())
+                          : null,
+                    ),
+                    const SizedBox(width: 16.0),
+                    _buildButton(
+                      label: 'Disconnect',
+                      onPressed: state.isConnected
+                          ? () => context.read<PosBloc>().add(DisconnectEvent())
+                          : null,
+                    ),
+                    const SizedBox(width: 16.0),
+                    _buildButton(
+                      label: 'Send',
+                      onPressed: state.isConnected && !state.isLoading
+                          ? () {
+                              final amount =
+                                  int.tryParse(_amountController.text);
+                              final payload = _payloadController.text;
+                              if (amount != null) {
+                                context.read<PosBloc>().add(SendAmountEvent(
+                                    amount: amount, payload: payload));
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Invalid amount')),
+                                );
+                              }
+                            }
+                          : null,
+                    ),
+                    const SizedBox(width: 16.0),
+                    _buildButton(
+                      label: 'Cancel',
+                      onPressed: state.isConnected && state.isLoading
+                          ? () => context.read<PosBloc>().add(CancelEvent())
+                          : null,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16.0),
+            BlocListener<PosBloc, PosState>(
+              listener: (context, state) {
+                if (state.message.isNotEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message)),
+                  );
+                } else if (state.isConnected && state.message.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Connected")),
+                  );
+                } else if (!state.isConnected && !state.isLoading) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Disconnected")),
+                  );
+                }
+              },
+              listenWhen: (previous, current) {
+                // Only trigger the listener if the current state is different from the previous state
+                return previous.message != current.message ||
+                    previous.isConnected != current.isConnected;
+              },
+              child: BlocBuilder<PosBloc, PosState>(
+                builder: (context, state) {
+                  if (state.isLoading) {
+                    return const CircularProgressIndicator();
+                  } else {
+                    return Text(state.message);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<void> _connect() async {
-    final isConnected = await _pos.connect();
-    if (isConnected) {
-      setState(() => _connected = true);
-      _showSnackBar("Connected");
-    } else {
-      _showSnackBar("Cannot connect to POS device");
-    }
-  }
-
-  void _disconnect() {
-    _pos.disconnect();
-    setState(() {
-      _connected = false;
-      _loading = false;
-    });
-    _showSnackBar("Disconnected");
-  }
-
-  Future<void> _sendCancel() async {
-    setState(() => _loading = true);
-    try {
-      final command = ParsianCancelCommand();
-      await _pos.sendCommand(command);
-    } catch (e) {
-      _showSnackBar("Error cancelling command");
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _payloadController.dispose();
-    _pos.disconnect();
-    super.dispose();
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    TextInputType keyboardType = TextInputType.text,
-    TextInputAction textInputAction = TextInputAction.done,
-  }) {
+  Widget _buildTextField(
+      {required TextEditingController controller, required String label}) {
     return TextField(
       controller: controller,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
@@ -134,68 +125,11 @@ class MainWidgetState extends State<MainWidget> {
     );
   }
 
-  Widget _buildButton({
-    required String label,
-    required VoidCallback? onPressed,
-  }) {
+  Widget _buildButton(
+      {required String label, required VoidCallback? onPressed}) {
     return ElevatedButton(
       onPressed: onPressed,
       child: Text(label),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
-        children: [
-          _buildTextField(
-            controller: _amountController,
-            label: 'Enter amount',
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 16.0),
-          _buildTextField(
-            controller: _payloadController,
-            label: 'Enter payload',
-          ),
-          const SizedBox(height: 16.0),
-          Wrap(
-            children: [
-              _buildButton(
-                label: 'Connect',
-                onPressed: _connected ? null : _connect,
-              ),
-              const SizedBox(width: 16.0),
-              _buildButton(
-                label: 'Disconnect',
-                onPressed: _connected ? _disconnect : null,
-              ),
-              const SizedBox(width: 16.0),
-              _buildButton(
-                label: 'Send',
-                onPressed: _loading || !_connected ? null : _sendAmount,
-              ),
-              const SizedBox(width: 16.0),
-              _buildButton(
-                label: 'Cancel',
-                onPressed: _loading && _connected ? _sendCancel : null,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-          Text(
-            _messageResult,
-            style: const TextStyle(fontSize: 18.0, color: Colors.blue),
-          ),
-          if(data.isNotEmpty)
-          Text(
-            data.toString(),
-          ),
-        ],
-      ),
     );
   }
 }
