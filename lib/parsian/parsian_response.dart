@@ -29,7 +29,7 @@ class ParsianBuyResponse extends BuyResponse {
 
     return ParsianBuyResponse(
       rrn: json['rrn'] ?? "",
-      dateTime: json['datetime'] ?? DateTime.now.toString(),
+      dateTime: json['datetime'] ?? DateTime.now().toString(),
       serial: json['serial'] ?? "",
       trace: json['trace'] ?? "",
       amount: json['amount'] ?? "",
