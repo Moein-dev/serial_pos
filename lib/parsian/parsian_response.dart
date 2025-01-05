@@ -23,21 +23,21 @@ class ParsianBuyResponse extends BuyResponse {
     required this.data1,
   });
 
-  // Factory constructor to create a ParsianBuyResponse instance from JSON
+// Factory constructor to create a ParsianBuyResponse instance from JSON
   factory ParsianBuyResponse.fromJson(String jsonString, String payload) {
     final json = jsonDecode(jsonString);
 
     return ParsianBuyResponse(
-      rrn: json['rrn'],
-      dateTime: json['datetime'] ?? DateTime.now().toString(),
-      serial: json['serial'],
-      trace: json['trace'],
-      amount: json['amount'],
-      cardNumber: json['pan'],
-      maskedCardNumber: json['pan'],
-      terminal: json['terminal'],
-      settlement: json['settlement'],
-      discount: json['discount'],
+      rrn: json['rrn'] ?? "",
+      dateTime: json['datetime'] ?? DateTime.now.toString(),
+      serial: json['serial'] ?? "",
+      trace: json['trace'] ?? "",
+      amount: json['amount'] ?? "",
+      cardNumber: json['pan'] ?? "",
+      maskedCardNumber: json['pan'] ?? "",
+      terminal: json['terminal'] ?? "",
+      settlement: json['settlement'] ?? "",
+      discount: json['discount'] ?? "",
       data1: json['data1'] ?? "",
       payload: payload,
     );
