@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:serial_pos/parsian/parsian_response.dart';
 import 'package:serial_pos/parsian/parsian_response_parser.dart';
 import 'package:serial_pos/pos_command.dart';
 import 'package:serial_pos/pos_device.dart';
 import 'package:serial_pos/serial_communication.dart';
+
 
 import '../pos_response.dart';
 import '../pos_response_parser.dart';
@@ -59,14 +61,30 @@ class ParsianPos implements PosDevice {
     String commandStr = command.buildCommand();
     String commandLength =
         commandStr.length.toString().padLeft(headerSize, '0');
-    await _serialCommunication.sendData("$commandLength$commandStr");
+    await _serialCommunication.sendData("$commandLength$commandStr\r\n");
   }
 
   void _listenToSerialMessages() {
     _serialCommunication.onMessageReceived.listen((event) {
-      _messageBuffer.write(event);
-      debugPrint("message buffer $_messageBuffer");
-      _processMessage();
+      if (event != "0" && _messageBuffer.isEmpty) {
+        _messageBuffer.write("0$event");
+      } else {
+        _messageBuffer.write(event);
+      }
+
+      debugPrint("message buffer: ${_messageBuffer.toString()}");
+
+      try {
+        _processMessage();
+      } catch (e) {
+        debugPrint("error in parsing response: $e");
+        _messageBuffer.clear();
+        _messageLength = 0;
+
+        final response =
+            ParsianFailedResponse(cmd: 10, resp: -2, payload: payload);
+        _messageEventController.add(response);
+      }
     });
   }
 
@@ -77,7 +95,8 @@ class ParsianPos implements PosDevice {
       _messageLength = int.parse(lengthString);
     }
 
-    debugPrint("${_messageBuffer.length} == ${_messageLength + headerSize}");
+    debugPrint(
+        "buffer length: ${_messageBuffer.length} == header length: ${_messageLength + headerSize}");
 
     if (_messageBuffer.length == _messageLength + headerSize) {
       final response = parser.parse(
