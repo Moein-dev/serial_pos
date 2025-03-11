@@ -45,7 +45,7 @@ class SerialCommunication {
 
   Future<void> sendData(String data) async {
     debugPrint("sending: $data");
-    final commandBytes = Uint8List.fromList(utf8.encode(data + "\r\n"));
+    final commandBytes = Uint8List.fromList(utf8.encode("$data\r\n"));
     await _flutterSerialCommunicationPlugin.write(commandBytes);
   }
 }
