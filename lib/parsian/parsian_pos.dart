@@ -7,7 +7,6 @@ import 'package:serial_pos/pos_command.dart';
 import 'package:serial_pos/pos_device.dart';
 import 'package:serial_pos/serial_communication.dart';
 
-
 import '../pos_response.dart';
 import '../pos_response_parser.dart';
 
@@ -15,7 +14,6 @@ class ParsianPos implements PosDevice {
   late final SerialCommunication _serialCommunication;
   final _messageEventController = StreamController<PosResponse>.broadcast();
   final StringBuffer _messageBuffer = StringBuffer();
-  int _messageLength = 0;
   static const headerSize = 4;
   String payload = "";
 
@@ -66,11 +64,7 @@ class ParsianPos implements PosDevice {
 
   void _listenToSerialMessages() {
     _serialCommunication.onMessageReceived.listen((event) {
-      if (event != "0" && _messageBuffer.isEmpty) {
-        _messageBuffer.write("0$event");
-      } else {
-        _messageBuffer.write(event);
-      }
+      _messageBuffer.write(event);
 
       debugPrint("message buffer: ${_messageBuffer.toString()}");
 
@@ -79,7 +73,6 @@ class ParsianPos implements PosDevice {
       } catch (e) {
         debugPrint("error in parsing response: $e");
         _messageBuffer.clear();
-        _messageLength = 0;
 
         final response =
             ParsianFailedResponse(cmd: 10, resp: -2, payload: payload);
@@ -89,22 +82,20 @@ class ParsianPos implements PosDevice {
   }
 
   void _processMessage() {
-    if (_messageBuffer.length >= headerSize && _messageLength == 0) {
-      final lengthString = _messageBuffer.toString().substring(0, headerSize);
-      debugPrint("length: $lengthString");
-      _messageLength = int.parse(lengthString);
-    }
-
-    debugPrint(
-        "buffer length: ${_messageBuffer.length} == header length: ${_messageLength + headerSize}");
-
-    if (_messageBuffer.length == _messageLength + headerSize) {
-      final response = parser.parse(
-          _messageBuffer.toString().substring(headerSize), payload);
-      debugPrint("parsed response: $response");
+    if (_messageBuffer.toString().endsWith("}")) {
+      final jsonPattern = RegExp(r'\{.*\}');
+      final json = jsonPattern.firstMatch(_messageBuffer.toString())?.group(0);
 
       _messageBuffer.clear();
-      _messageLength = 0;
+
+      final PosResponse response;
+      if (json == null) {
+        response = ParsianFailedResponse(cmd: 10, resp: -3, payload: payload);
+      } else {
+        response = parser.parse(json, payload);
+      }
+
+      debugPrint("parsed response: $response");
 
       _messageEventController.add(response);
     }
